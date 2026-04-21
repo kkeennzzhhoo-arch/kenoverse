@@ -1,0 +1,476 @@
+import { useState, useEffect, useRef } from "react";
+
+const FONT = `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Exo+2:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');`;
+
+const CSS = `
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --p:#7c3aed; --pg:#8b5cf6; --pb:#6d28d9;
+  --a:#f59e0b; --a2:#fbbf24;
+  --g:#10b981;
+  --bg:#07090f; --bg2:#0d1120; --bg3:#111827;
+  --t:#f1f5f9; --s:#94a3b8; --m:#475569;
+  --r:16px;
+}
+body { background:var(--bg); color:var(--t); font-family:'Exo 2',sans-serif; overflow-x:hidden; }
+::-webkit-scrollbar { width:3px; background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--p); border-radius:2px; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes shimmer { 0%{left:-100%} 100%{left:200%} }
+@keyframes ping { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(2.2);opacity:0} }
+@keyframes gradMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes typewriter { from{width:0} to{width:100%} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes gridPan { 0%{background-position:0 0} 100%{background-position:40px 40px} }
+@keyframes orb1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(60px,-40px) scale(1.1)} 66%{transform:translate(-40px,30px) scale(.9)} }
+@keyframes orb2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,60px) scale(1.15)} 66%{transform:translate(70px,-20px) scale(.85)} }
+
+.nav { position:fixed; top:0; left:0; right:0; z-index:1000; backdrop-filter:blur(20px); background:rgba(7,9,15,.8); border-bottom:1px solid rgba(124,58,237,.15); }
+.nav-inner { max-width:1200px; margin:0 auto; padding:0 24px; height:64px; display:flex; align-items:center; justify-content:space-between; }
+.logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.logo-icon { width:36px; height:36px; background:linear-gradient(135deg,#7c3aed,#f59e0b); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; box-shadow:0 0 20px rgba(124,58,237,.5); }
+.logo-text { font-family:Syne; font-weight:900; font-size:1.25rem; background:linear-gradient(135deg,#8b5cf6,#f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-.02em; }
+.nav-links { display:flex; align-items:center; gap:8px; }
+.nav-link { padding:8px 16px; border-radius:8px; color:var(--s); font-weight:600; font-size:.875rem; cursor:pointer; transition:all .2s; border:none; background:transparent; }
+.nav-link:hover { color:var(--t); background:rgba(124,58,237,.1); }
+.nav-cta { padding:8px 20px; border-radius:8px; background:linear-gradient(135deg,var(--p),var(--pb)); color:#fff; font-weight:700; font-size:.875rem; cursor:pointer; border:none; transition:all .2s; box-shadow:0 4px 15px rgba(124,58,237,.3); }
+.nav-cta:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(124,58,237,.4); }
+
+.hero { min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; padding:80px 24px 40px; }
+.hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(124,58,237,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.04) 1px,transparent 1px); background-size:40px 40px; animation:gridPan 15s linear infinite; }
+.orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
+.orb1 { width:500px; height:500px; background:rgba(124,58,237,.15); top:-100px; right:-100px; animation:orb1 12s ease-in-out infinite; }
+.orb2 { width:400px; height:400px; background:rgba(245,158,11,.1); bottom:-50px; left:-80px; animation:orb2 15s ease-in-out infinite; }
+.hero-content { position:relative; text-align:center; max-width:800px; animation:fadeUp .8s ease both; }
+.hero-badge { display:inline-flex; align-items:center; gap:8px; padding:6px 16px; border-radius:99px; background:rgba(124,58,237,.12); border:1px solid rgba(124,58,237,.25); font-size:.8rem; font-weight:700; color:var(--pg); margin-bottom:24px; }
+.badge-dot { width:6px; height:6px; border-radius:50%; background:var(--g); animation:pulse 2s infinite; }
+.hero-title { font-family:Syne; font-weight:900; font-size:clamp(2.5rem,7vw,5rem); line-height:1.05; letter-spacing:-.03em; margin-bottom:20px; }
+.hero-title span { background:linear-gradient(135deg,#8b5cf6,#f59e0b,#8b5cf6); background-size:200% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation:gradMove 4s ease infinite; }
+.hero-sub { font-size:clamp(1rem,2vw,1.2rem); color:var(--s); line-height:1.7; max-width:560px; margin:0 auto 36px; }
+.hero-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:48px; }
+.btn-primary { padding:14px 32px; border-radius:12px; background:linear-gradient(135deg,var(--p),var(--pb)); color:#fff; font-weight:800; font-size:1rem; cursor:pointer; border:none; transition:all .25s; box-shadow:0 8px 30px rgba(124,58,237,.4); letter-spacing:.02em; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(124,58,237,.5); }
+.btn-ghost { padding:14px 32px; border-radius:12px; background:rgba(255,255,255,.04); color:var(--t); font-weight:700; font-size:1rem; cursor:pointer; border:1px solid rgba(255,255,255,.1); transition:all .25s; }
+.btn-ghost:hover { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); transform:translateY(-2px); }
+.hero-stats { display:flex; gap:32px; justify-content:center; flex-wrap:wrap; }
+.stat { text-align:center; }
+.stat-num { font-family:Syne; font-weight:900; font-size:1.75rem; background:linear-gradient(135deg,var(--pg),var(--a)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.stat-label { font-size:.75rem; color:var(--m); font-weight:600; letter-spacing:.08em; margin-top:2px; }
+
+.section { padding:100px 24px; max-width:1200px; margin:0 auto; }
+.section-tag { display:inline-block; padding:4px 14px; border-radius:99px; background:rgba(124,58,237,.1); border:1px solid rgba(124,58,237,.2); color:var(--pg); font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:16px; }
+.section-title { font-family:Syne; font-weight:900; font-size:clamp(1.75rem,4vw,2.75rem); letter-spacing:-.02em; margin-bottom:16px; }
+.section-sub { color:var(--s); font-size:1.05rem; line-height:1.7; max-width:560px; }
+
+.features-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; margin-top:60px; }
+.feature-card { background:var(--bg3); border:1px solid rgba(124,58,237,.12); border-radius:var(--r); padding:28px; transition:all .3s; position:relative; overflow:hidden; cursor:default; }
+.feature-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(124,58,237,.06),transparent); opacity:0; transition:opacity .3s; }
+.feature-card:hover { border-color:rgba(124,58,237,.35); transform:translateY(-4px); box-shadow:0 20px 40px rgba(124,58,237,.12); }
+.feature-card:hover::before { opacity:1; }
+.feature-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:16px; }
+.feature-title { font-family:Syne; font-weight:800; font-size:1.1rem; margin-bottom:8px; }
+.feature-desc { color:var(--s); font-size:.9rem; line-height:1.6; }
+
+.games-row { display:flex; gap:16px; overflow-x:auto; padding-bottom:8px; margin-top:48px; scrollbar-width:none; }
+.games-row::-webkit-scrollbar { display:none; }
+.game-card { flex-shrink:0; width:200px; background:var(--bg3); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:20px; text-align:center; transition:all .25s; cursor:pointer; }
+.game-card:hover { border-color:rgba(124,58,237,.4); transform:translateY(-4px); box-shadow:0 16px 40px rgba(124,58,237,.15); }
+.game-emoji { font-size:2.5rem; margin-bottom:12px; display:block; animation:float 3s ease-in-out infinite; }
+.game-name { font-weight:800; font-size:.95rem; margin-bottom:4px; }
+.game-players { font-size:.75rem; color:var(--m); }
+.game-tag { display:inline-block; margin-top:8px; padding:2px 10px; border-radius:99px; font-size:.65rem; font-weight:700; background:rgba(124,58,237,.15); color:var(--pg); }
+
+.pricing-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; margin-top:60px; }
+.price-card { background:var(--bg3); border:1px solid rgba(255,255,255,.07); border-radius:var(--r); padding:28px; position:relative; overflow:hidden; transition:all .3s; }
+.price-card.popular { border-color:var(--p); box-shadow:0 0 40px rgba(124,58,237,.2); }
+.price-card.popular::after { content:'TERPOPULER'; position:absolute; top:16px; right:-28px; transform:rotate(45deg); background:var(--p); color:#fff; font-size:.6rem; font-weight:800; padding:4px 36px; letter-spacing:.1em; }
+.price-icon { font-size:2rem; margin-bottom:12px; }
+.price-name { font-family:Syne; font-weight:800; font-size:1rem; margin-bottom:4px; }
+.price-coins { font-family:'Space Mono',monospace; font-size:1.5rem; font-weight:700; color:var(--a); margin:8px 0 4px; }
+.price-bonus { font-size:.75rem; color:var(--g); margin-bottom:16px; }
+.price-amount { font-size:1rem; color:var(--s); margin-bottom:20px; }
+.price-btn { width:100%; padding:10px; border-radius:10px; font-weight:700; font-size:.875rem; cursor:pointer; border:none; transition:all .2s; }
+.price-btn.active { background:linear-gradient(135deg,var(--p),var(--pb)); color:#fff; box-shadow:0 4px 15px rgba(124,58,237,.3); }
+.price-btn.inactive { background:rgba(255,255,255,.05); color:var(--s); border:1px solid rgba(255,255,255,.08); }
+
+.security-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; margin-top:60px; }
+.sec-item { display:flex; align-items:flex-start; gap:14px; background:rgba(16,185,129,.05); border:1px solid rgba(16,185,129,.12); border-radius:12px; padding:18px; }
+.sec-icon { width:36px; height:36px; border-radius:8px; background:rgba(16,185,129,.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem; }
+.sec-title { font-weight:700; font-size:.9rem; margin-bottom:3px; }
+.sec-desc { font-size:.78rem; color:var(--s); line-height:1.5; }
+
+.testimonials { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; margin-top:60px; }
+.testi-card { background:var(--bg3); border:1px solid rgba(255,255,255,.07); border-radius:var(--r); padding:24px; }
+.testi-stars { color:var(--a); font-size:1rem; margin-bottom:12px; letter-spacing:2px; }
+.testi-text { color:var(--s); font-size:.9rem; line-height:1.6; margin-bottom:16px; font-style:italic; }
+.testi-user { display:flex; align-items:center; gap:10px; }
+.testi-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--a)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.875rem; color:#fff; }
+.testi-name { font-weight:700; font-size:.875rem; }
+.testi-since { font-size:.7rem; color:var(--m); }
+
+.cta-section { margin:60px 24px; background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(245,158,11,.1)); border:1px solid rgba(124,58,237,.25); border-radius:24px; padding:64px 40px; text-align:center; position:relative; overflow:hidden; max-width:1200px; margin-left:auto; margin-right:auto; }
+.cta-section::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle at 50% 50%,rgba(124,58,237,.08),transparent 60%); pointer-events:none; }
+.cta-title { font-family:Syne; font-weight:900; font-size:clamp(2rem,4vw,3rem); letter-spacing:-.02em; margin-bottom:16px; }
+.cta-sub { color:var(--s); font-size:1.05rem; max-width:500px; margin:0 auto 32px; line-height:1.7; }
+.app-badges { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.app-badge { display:flex; align-items:center; gap:10px; padding:12px 24px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); cursor:pointer; transition:all .25s; }
+.app-badge:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); transform:translateY(-2px); }
+.app-badge-icon { font-size:1.5rem; }
+.app-badge-text { text-align:left; }
+.app-badge-sub { font-size:.65rem; color:var(--s); display:block; }
+.app-badge-name { font-weight:800; font-size:.95rem; display:block; }
+
+.footer { background:var(--bg2); border-top:1px solid rgba(255,255,255,.06); padding:60px 24px 32px; }
+.footer-inner { max-width:1200px; margin:0 auto; }
+.footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:48px; }
+.footer-brand p { color:var(--s); font-size:.875rem; line-height:1.7; margin-top:12px; max-width:280px; }
+.footer-col h4 { font-weight:800; font-size:.875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--m); margin-bottom:16px; }
+.footer-col a { display:block; color:var(--s); font-size:.875rem; padding:4px 0; cursor:pointer; transition:color .2s; }
+.footer-col a:hover { color:var(--t); }
+.footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:32px; border-top:1px solid rgba(255,255,255,.06); gap:16px; flex-wrap:wrap; }
+.footer-bottom p { font-size:.8rem; color:var(--m); }
+.footer-chips { display:flex; gap:8px; flex-wrap:wrap; }
+.chip { padding:3px 10px; border-radius:99px; font-size:.65rem; font-weight:700; background:rgba(16,185,129,.1); color:var(--g); border:1px solid rgba(16,185,129,.2); }
+
+.online-indicator { display:flex; align-items:center; gap:6px; font-size:.75rem; color:var(--g); font-family:'Space Mono',monospace; }
+.online-dot { width:8px; height:8px; border-radius:50%; background:var(--g); position:relative; }
+.online-dot::after { content:''; position:absolute; inset:-2px; border-radius:50%; background:var(--g); animation:ping 1.5s ease-out infinite; }
+
+.mobile-menu-btn { display:none; background:none; border:none; cursor:pointer; color:var(--t); font-size:1.25rem; padding:4px; }
+
+@media(max-width:768px){
+  .nav-links { display:none; }
+  .mobile-menu-btn { display:block; }
+  .footer-grid { grid-template-columns:1fr 1fr; }
+  .hero-stats { gap:20px; }
+  .stat-num { font-size:1.4rem; }
+}
+@media(max-width:480px){
+  .footer-grid { grid-template-columns:1fr; }
+  .hero-btns { flex-direction:column; align-items:center; }
+}
+`;
+
+const FEATURES = [
+  { icon:"🎮", color:"rgba(124,58,237,.15)", title:"Game Lobby Real-Time", desc:"Temukan teman main dalam hitungan detik. Matchmaking otomatis berdasarkan game favorit dan skill level kamu." },
+  { icon:"💬", color:"rgba(16,185,129,.12)", title:"Chat & Voice HD", desc:"Komunikasi tanpa lag dengan end-to-end encryption. Voice call kualitas tinggi langsung di platform." },
+  { icon:"🏆", color:"rgba(245,158,11,.12)", title:"Tournament & Event", desc:"Ikut turnamen berhadiah setiap minggu. Kompetisi resmi dengan hadiah total jutaan rupiah." },
+  { icon:"💳", color:"rgba(239,68,68,.1)", title:"KenoCoin System", desc:"Mata uang platform untuk akses fitur premium, item eksklusif, dan slot tournament." },
+  { icon:"🛡️", color:"rgba(124,58,237,.12)", title:"Anti-Hack Protection", desc:"Sistem keamanan berlapis: JWT, rate limit, enkripsi end-to-end, dan deteksi anomali real-time." },
+  { icon:"📱", color:"rgba(59,130,246,.12)", title:"Cross-Platform", desc:"Main di HP, tablet, atau PC. Data tersinkron sempurna di semua perangkat kamu." },
+];
+
+const GAMES = [
+  { emoji:"🏠", name:"Brookhaven RP", players:"2.4M", tag:"Roleplay" },
+  { emoji:"🐾", name:"Adopt Me!", players:"1.9M", tag:"Pets" },
+  { emoji:"⚔️", name:"Blox Fruits", players:"1.1M", tag:"Fighting" },
+  { emoji:"🗼", name:"Tower of Hell", players:"700K", tag:"Obby" },
+  { emoji:"🔫", name:"Arsenal", players:"580K", tag:"FPS" },
+  { emoji:"🔪", name:"Murder Mystery", players:"490K", tag:"Social" },
+  { emoji:"🚗", name:"Jailbreak", players:"420K", tag:"Open World" },
+  { emoji:"⚽", name:"Kick Off", players:"310K", tag:"Sports" },
+];
+
+const PACKAGES = [
+  { icon:"💠", name:"Starter", coins:100, bonus:0, price:"Rp 15.000", popular:false },
+  { icon:"💎", name:"Popular", coins:500, bonus:50, price:"Rp 65.000", popular:true },
+  { icon:"👑", name:"Pro", coins:1200, bonus:300, price:"Rp 130.000", popular:false },
+  { icon:"🌟", name:"Legend", coins:3000, bonus:1000, price:"Rp 280.000", popular:false },
+];
+
+const SECURITY = [
+  { icon:"🔐", title:"JWT + EdDSA", desc:"Token terenkripsi dengan algoritma Ed25519. Setiap sesi terikat ke perangkat kamu." },
+  { icon:"🛡️", title:"Rate Limiting", desc:"Perlindungan berlapis dari brute force, spam, dan serangan otomatis." },
+  { icon:"🔒", title:"Enkripsi AES-256", desc:"Data sensitif terenkripsi di database. Bocor pun tidak bisa dibaca." },
+  { icon:"📋", title:"Audit Log Imutable", desc:"Setiap transaksi dicatat dengan hash chain yang tidak bisa dimanipulasi." },
+  { icon:"💳", title:"Webhook Verified", desc:"Pembayaran hanya dikonfirmasi setelah verifikasi ganda dari Midtrans." },
+  { icon:"🌐", title:"Cloudflare Shield", desc:"Proteksi DDoS + WAF enterprise di lapisan terdepan sistem kami." },
+];
+
+const TESTIMONIALS = [
+  { stars:5, text:"Platform ini bener-bener next level! Voice call jernih, chat anti-lag, dan matchmaking super cepet. Mabar jadi jauh lebih seru!", name:"Rizky_Gamer", since:"Member sejak Jan 2024" },
+  { stars:5, text:"Udah nyoba banyak platform mabar, tapi Kenoverse yang paling smooth. UI-nya keren, fiturnya lengkap, dan yang paling penting AMAN!", name:"NinjaCraft_ID", since:"Member sejak Feb 2024" },
+  { stars:5, text:"Belinya mudah, KenoCoin langsung masuk, room-nya gampang dibuat. Tim support juga responsif banget. Recommended 100%!", name:"QueenRoblox", since:"Member sejak Mar 2024" },
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState("beranda");
+  const [onlineCount] = useState(() => Math.floor(Math.random() * 3000 + 10000));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const heroRef = useRef(null);
+
+  const navItems = ["Fitur", "Game", "Harga", "Keamanan"];
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMobileOpen(false);
+  };
+
+  return (
+    <>
+      <style>{FONT + CSS}</style>
+
+      {/* NAV */}
+      <nav className="nav">
+        <div className="nav-inner">
+          <div className="logo">
+            <div className="logo-icon">🌐</div>
+            <span className="logo-text">KENOVERSE</span>
+          </div>
+          <div className="nav-links">
+            {navItems.map(n => (
+              <button key={n} className="nav-link" onClick={() => scrollTo(n.toLowerCase())}>
+                {n}
+              </button>
+            ))}
+            <div style={{ width:1, height:20, background:"rgba(255,255,255,.1)", margin:"0 8px" }} />
+            <div className="online-indicator">
+              <span className="online-dot" />
+              {onlineCount.toLocaleString("id")} online
+            </div>
+            <button className="nav-cta" style={{ marginLeft:12 }}>Mulai Gratis</button>
+          </div>
+          <button className="mobile-menu-btn" onClick={() => setMobileOpen(o => !o)}>☰</button>
+        </div>
+        {mobileOpen && (
+          <div style={{ background:"var(--bg2)", borderTop:"1px solid rgba(255,255,255,.06)", padding:"12px 24px 16px" }}>
+            {navItems.map(n => (
+              <button key={n} className="nav-link" style={{ display:"block", width:"100%", textAlign:"left", marginBottom:4 }} onClick={() => scrollTo(n.toLowerCase())}>
+                {n}
+              </button>
+            ))}
+            <button className="nav-cta" style={{ marginTop:8, width:"100%" }}>Mulai Gratis</button>
+          </div>
+        )}
+      </nav>
+
+      {/* HERO */}
+      <section className="hero" ref={heroRef}>
+        <div className="hero-grid" />
+        <div className="orb orb1" />
+        <div className="orb orb2" />
+        <div className="hero-content">
+          <div className="hero-badge">
+            <span className="badge-dot" />
+            Platform Mabar Roblox #1 Indonesia
+          </div>
+          <h1 className="hero-title">
+            Mabar Lebih Seru,<br />
+            <span>Lebih Aman, Lebih Epic</span>
+          </h1>
+          <p className="hero-sub">
+            Temukan teman gaming, buat room private, chat real-time, dan nikmati pengalaman bermain yang tidak bisa kamu dapatkan di tempat lain.
+          </p>
+          <div className="hero-btns">
+            <button className="btn-primary">🚀 Main Sekarang — Gratis!</button>
+            <button className="btn-ghost">▶ Lihat Demo</button>
+          </div>
+          <div className="hero-stats">
+            {[
+              { num:"15K+", label:"GAMER AKTIF" },
+              { num:"50K+", label:"SESI MABAR" },
+              { num:"99.9%", label:"UPTIME" },
+              { num:"4.9★", label:"RATING" },
+            ].map(s => (
+              <div className="stat" key={s.label}>
+                <div className="stat-num">{s.num}</div>
+                <div className="stat-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FITUR */}
+      <section id="fitur" className="section">
+        <div className="section-tag">Kenapa Kenoverse?</div>
+        <h2 className="section-title">Semua yang Kamu Butuhkan<br />untuk Mabar Sempurna</h2>
+        <p className="section-sub">Dari matchmaking otomatis sampai keamanan level fintech — kami handle semuanya supaya kamu bisa fokus bermain.</p>
+        <div className="features-grid">
+          {FEATURES.map(f => (
+            <div className="feature-card" key={f.title}>
+              <div className="feature-icon" style={{ background:f.color }}>{f.icon}</div>
+              <div className="feature-title">{f.title}</div>
+              <div className="feature-desc">{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* GAME */}
+      <section id="game" style={{ padding:"100px 0", background:"linear-gradient(180deg,var(--bg),var(--bg2),var(--bg))" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 24px" }}>
+          <div className="section-tag">Game Library</div>
+          <h2 className="section-title">Game Populer yang Tersedia</h2>
+          <p className="section-sub">Dari Roleplay sampai FPS, semua ada. Ribuan room aktif setiap hari — tinggal pilih dan langsung join.</p>
+          <div className="games-row">
+            {GAMES.map((g, i) => (
+              <div className="game-card" key={g.name} style={{ animationDelay:`${i*0.1}s` }}>
+                <span className="game-emoji" style={{ animationDelay:`${i*0.3}s` }}>{g.emoji}</span>
+                <div className="game-name">{g.name}</div>
+                <div className="game-players">👥 {g.players} pemain</div>
+                <div className="game-tag">{g.tag}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HARGA */}
+      <section id="harga" className="section">
+        <div className="section-tag">KenoCoin</div>
+        <h2 className="section-title">Pilih Paket Sesuai<br />Kebutuhanmu</h2>
+        <p className="section-sub">Beli KenoCoin untuk akses fitur premium, item eksklusif, dan slot tournament. Aman, cepat, dan terpercaya.</p>
+        <div className="pricing-grid">
+          {PACKAGES.map(p => (
+            <div className={`price-card${p.popular ? " popular" : ""}`} key={p.name}>
+              <div className="price-icon">{p.icon}</div>
+              <div className="price-name">{p.name}</div>
+              <div className="price-coins">{p.coins.toLocaleString("id")} 💠</div>
+              {p.bonus > 0 && <div className="price-bonus">+ {p.bonus} bonus coins!</div>}
+              <div className="price-amount">{p.price}</div>
+              <button className={`price-btn ${p.popular ? "active" : "inactive"}`}>
+                {p.popular ? "💳 Beli Sekarang" : "Beli"}
+              </button>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop:32, padding:"20px 24px", background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.15)", borderRadius:12, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+          <span style={{ fontSize:"1.5rem" }}>🔐</span>
+          <div>
+            <div style={{ fontWeight:700, fontSize:".9rem", marginBottom:2 }}>Pembayaran 100% Aman</div>
+            <div style={{ color:"var(--s)", fontSize:".8rem" }}>GoPay · OVO · DANA · ShopeePay · Transfer Bank · Kartu Kredit · Crypto USDT</div>
+          </div>
+          <div style={{ marginLeft:"auto", display:"flex", gap:8, flexWrap:"wrap" }}>
+            {["SSL 256-bit", "Midtrans", "Webhook Verified"].map(l => (
+              <span key={l} style={{ padding:"3px 10px", borderRadius:99, fontSize:".65rem", fontWeight:700, background:"rgba(16,185,129,.1)", color:"var(--g)", border:"1px solid rgba(16,185,129,.2)" }}>{l}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* KEAMANAN */}
+      <section id="keamanan" style={{ padding:"100px 24px", background:"var(--bg2)" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div className="section-tag">Security</div>
+          <h2 className="section-title">Keamanan Level Fintech<br />untuk Platform Gaming</h2>
+          <p className="section-sub">Dibangun dengan arsitektur defense-in-depth yang sama dengan sistem perbankan digital — karena uang dan data kamu berharga.</p>
+          <div className="security-grid">
+            {SECURITY.map(s => (
+              <div className="sec-item" key={s.title}>
+                <div className="sec-icon">{s.icon}</div>
+                <div>
+                  <div className="sec-title">{s.title}</div>
+                  <div className="sec-desc">{s.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIAL */}
+      <section className="section">
+        <div className="section-tag">Komunitas</div>
+        <h2 className="section-title">Apa Kata Mereka?</h2>
+        <p className="section-sub">Lebih dari 15.000 gamer sudah merasakan pengalaman mabar yang berbeda bersama Kenoverse.</p>
+        <div className="testimonials">
+          {TESTIMONIALS.map(t => (
+            <div className="testi-card" key={t.name}>
+              <div className="testi-stars">{"★".repeat(t.stars)}</div>
+              <div className="testi-text">"{t.text}"</div>
+              <div className="testi-user">
+                <div className="testi-avatar">{t.name[0]}</div>
+                <div>
+                  <div className="testi-name">{t.name}</div>
+                  <div className="testi-since">{t.since}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <div className="cta-section">
+        <div style={{ position:"relative" }}>
+          <div style={{ fontSize:"3rem", marginBottom:16 }}>🎮</div>
+          <h2 className="cta-title">Siap Mabar Bersama<br /><span style={{ color:"var(--pg)" }}>15.000+ Gamer Indonesia?</span></h2>
+          <p className="cta-sub">Gratis untuk bergabung. Tidak perlu kartu kredit. Langsung main dalam 60 detik.</p>
+          <div style={{ marginBottom:32 }}>
+            <button className="btn-primary" style={{ fontSize:"1.1rem", padding:"16px 40px" }}>
+              🚀 Buat Akun Gratis Sekarang
+            </button>
+          </div>
+          <div className="app-badges">
+            <div className="app-badge">
+              <span className="app-badge-icon">🍎</span>
+              <div className="app-badge-text">
+                <span className="app-badge-sub">Download di</span>
+                <span className="app-badge-name">App Store</span>
+              </div>
+            </div>
+            <div className="app-badge">
+              <span className="app-badge-icon">▶</span>
+              <div className="app-badge-text">
+                <span className="app-badge-sub">Tersedia di</span>
+                <span className="app-badge-name">Google Play</span>
+              </div>
+            </div>
+            <div className="app-badge">
+              <span className="app-badge-icon">🌐</span>
+              <div className="app-badge-text">
+                <span className="app-badge-sub">Buka di</span>
+                <span className="app-badge-name">Browser</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-grid">
+            <div className="footer-brand">
+              <div className="logo" style={{ marginBottom:12 }}>
+                <div className="logo-icon">🌐</div>
+                <span className="logo-text">KENOVERSE</span>
+              </div>
+              <p>Platform mabar Roblox #1 Indonesia. Temukan teman bermain, bergabung dalam sesi gaming seru, dan nikmati fitur premium eksklusif.</p>
+              <div style={{ marginTop:16, display:"flex", gap:8, flexWrap:"wrap" }}>
+                {["🟢 Server Aktif", "99.9% Uptime"].map(s => (
+                  <span key={s} style={{ fontSize:".7rem", color:"var(--g)", background:"rgba(16,185,129,.08)", padding:"3px 10px", borderRadius:99, border:"1px solid rgba(16,185,129,.15)" }}>{s}</span>
+                ))}
+              </div>
+            </div>
+            <div className="footer-col">
+              <h4>Platform</h4>
+              {["Game Lobby", "Matchmaking", "Voice Chat", "Tournament", "Leaderboard"].map(l => <a key={l}>{l}</a>)}
+            </div>
+            <div className="footer-col">
+              <h4>Akun</h4>
+              {["Daftar", "Masuk", "Dashboard", "KenoCoin", "Langganan"].map(l => <a key={l}>{l}</a>)}
+            </div>
+            <div className="footer-col">
+              <h4>Bantuan</h4>
+              {["FAQ", "Hubungi Kami", "Kebijakan Privasi", "Syarat & Ketentuan", "Keamanan"].map(l => <a key={l}>{l}</a>)}
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>© 2025 KENOVERSE.GG — Semua hak dilindungi.</p>
+            <div className="footer-chips">
+              {["SSL Secured","Midtrans Partner","ISO 27001 Ready","GDPR Compliant"].map(c => (
+                <span key={c} className="chip">{c}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
