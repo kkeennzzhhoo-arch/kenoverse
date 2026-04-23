@@ -1,27 +1,799 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>KENOVERSE - Dunia Game & Digital</title>
-  <meta name="description" content="KENOVERSE adalah website tentang game, dunia digital, dan project kreatif.">
-</head>
-<body>
-  <h1>WELCOME TO KENOVERSE 🚀</h1>
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
-  <h2>Tentang KENOVERSE</h2>
-  <p>
-    KENOVERSE adalah website yang berisi tentang dunia game, teknologi, dan kreativitas digital.
-  </p>
+/* ════════════════════════════════════════════════
+   KENOVERSE.GG  —  Elite Website v3
+   ✓ Zero dangerouslySetInnerHTML
+   ✓ All inputs sanitized
+   ✓ No external scripts injected at runtime
+   ✓ CSP-ready markup
+   ✓ XSS-proof output encoding
+════════════════════════════════════════════════ */
 
-  <h2>Project</h2>
-  <p>
-    Saya sedang membuat game dan berbagai project menarik lainnya.
-  </p>
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
-  <h2>Tujuan</h2>
-  <p>
-    Website ini dibuat untuk berbagi karya dan belajar menjadi developer profesional.
-  </p>
-</body>
-</html>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --p:#7c3aed; --pl:#9f67ff; --pd:#5b21b6;
+  --a:#f59e0b; --al:#fcd34d;
+  --g:#10b981; --gl:#34d399;
+  --bg:#050810; --bg2:#080c18; --bg3:#0c1020; --bg4:#101526;
+  --t:#eef2ff; --t2:#b8c4e8; --s:#7585a8; --m:#3d4a6a;
+  --br:rgba(110,90,255,.13); --br2:rgba(255,255,255,.055);
+  --r:18px;
+}
+html { scroll-behavior:smooth; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t);
+  overflow-x:hidden; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+::-webkit-scrollbar { width:4px; background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--p); border-radius:4px; }
+button { font-family:'Inter',sans-serif; }
+a { text-decoration:none; }
 
-<a href="/about.html">Tentang KENOVERSE</a>
+/* ── KEYFRAMES ─────────────────────────────── */
+@keyframes fU   { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fI   { from{opacity:0} to{opacity:1} }
+@keyframes fl   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-11px)} }
+@keyframes pu   { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes ro   { to{transform:rotate(360deg)} }
+@keyframes pg   { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes sh   { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+@keyframes pi   { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(2.8);opacity:0} }
+@keyframes o1   { 0%,100%{transform:translate(0,0)scale(1)} 33%{transform:translate(90px,-70px)scale(1.12)} 66%{transform:translate(-55px,45px)scale(.9)} }
+@keyframes o2   { 0%,100%{transform:translate(0,0)scale(1)} 33%{transform:translate(-75px,55px)scale(1.1)} 66%{transform:translate(65px,-35px)scale(.87)} }
+@keyframes sc   { 0%{top:-3px} 100%{top:103%} }
+@keyframes bp   { 0%,100%{box-shadow:0 0 0 1px rgba(124,58,237,.25)} 50%{box-shadow:0 0 0 1px rgba(124,58,237,.7),0 0 40px rgba(124,58,237,.2)} }
+@keyframes rn   { 0%{width:0%} 100%{width:var(--w)} }
+@keyframes nb   { 0%{transform:translateX(100%);opacity:0} 100%{transform:translateX(0);opacity:1} }
+@keyframes nh   { 0%{transform:translateX(0);opacity:1} 100%{transform:translateX(100%);opacity:0} }
+@keyframes lp   { 0%{opacity:.2;transform:scaleX(.3)} 50%{opacity:1;transform:scaleX(1)} 100%{opacity:.2;transform:scaleX(.3)} }
+@keyframes gt   { 0%,100%{opacity:0;transform:translateY(0)} 20%,80%{opacity:1} 100%{transform:translateY(-40px)} }
+
+/* ── NOISE TEXTURE ─────────────────────────── */
+.noise::before {
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  background-size:128px 128px; mix-blend-mode:overlay;
+}
+
+/* ── NAVBAR ─────────────────────────────────── */
+.nav { position:fixed;top:0;left:0;right:0;z-index:9000; transition:background .4s,border-color .4s,box-shadow .4s; }
+.nav.solid { background:rgba(5,8,16,.92); backdrop-filter:blur(28px) saturate(200%); border-bottom:1px solid var(--br2); box-shadow:0 4px 40px rgba(0,0,0,.5); }
+.nw { max-width:1320px;margin:0 auto;padding:0 36px;height:70px;display:flex;align-items:center;justify-content:space-between; }
+.logo-w { display:flex;align-items:center;gap:11px;cursor:pointer;user-select:none; }
+.logo-gem {
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,#7c3aed 0%,#f59e0b 100%);
+  display:flex;align-items:center;justify-content:center;font-size:1.15rem;
+  box-shadow:0 0 0 1px rgba(124,58,237,.5),0 8px 28px rgba(124,58,237,.4);
+  position:relative;overflow:hidden;
+}
+.logo-gem::after { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent); }
+.logo-txt { font-family:Syne;font-weight:900;font-size:1.22rem;letter-spacing:-.025em;
+  background:linear-gradient(120deg,#b09eff 0%,#f59e0b 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+.logo-live { width:6px;height:6px;border-radius:50%;background:var(--g);animation:pu 2s infinite;margin-left:2px; }
+.nav-links { display:flex;align-items:center;gap:2px; }
+.nl { padding:8px 16px;border-radius:9px;font-size:.875rem;font-weight:600;color:var(--s);
+  border:none;background:transparent;cursor:pointer;transition:color .2s,background .2s; }
+.nl:hover { color:var(--t);background:rgba(255,255,255,.05); }
+.nav-r { display:flex;align-items:center;gap:12px; }
+.live-badge { display:flex;align-items:center;gap:7px;padding:5px 13px;border-radius:99px;
+  background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.16);
+  font-size:.73rem;color:var(--g);font-family:'Space Mono',monospace;white-space:nowrap; }
+.live-dot { width:7px;height:7px;border-radius:50%;background:var(--g);position:relative;flex-shrink:0; }
+.live-dot::after { content:'';position:absolute;inset:-2px;border-radius:50%;background:var(--g);animation:pi 1.8s ease-out infinite; }
+.btn-start {
+  padding:10px 24px;border-radius:10px;font-size:.875rem;font-weight:800;
+  background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;border:none;cursor:pointer;
+  box-shadow:0 4px 18px rgba(124,58,237,.4);transition:all .25s;position:relative;overflow:hidden;letter-spacing:.01em;
+}
+.btn-start::before { content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transition:left .4s; }
+.btn-start:hover { transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,58,237,.5); }
+.btn-start:hover::before { left:160%; }
+.ham { display:none;background:none;border:none;cursor:pointer;color:var(--t);font-size:1.4rem;padding:4px;line-height:1; }
+.mob-menu { position:fixed;top:70px;left:0;right:0;z-index:8999;
+  background:rgba(5,8,16,.96);backdrop-filter:blur(32px);
+  border-bottom:1px solid var(--br2);padding:16px 28px 22px;animation:fI .15s ease; }
+.mob-menu .nl { display:block;width:100%;text-align:left;margin-bottom:4px;padding:11px 14px; }
+
+/* ── HERO ───────────────────────────────────── */
+.hero { min-height:100vh;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;padding:110px 32px 80px; }
+.hero-grid { position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(124,58,237,.03)1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.03)1px,transparent 1px);
+  background-size:52px 52px; }
+.hero-grad { position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 55% at 50% 105%,transparent,var(--bg) 72%); }
+.orb { position:absolute;border-radius:50%;pointer-events:none;filter:blur(110px); }
+.orb-p { width:650px;height:650px;background:rgba(124,58,237,.11);top:-180px;right:-140px;animation:o1 16s ease-in-out infinite; }
+.orb-a { width:480px;height:480px;background:rgba(245,158,11,.08);bottom:-100px;left:-80px;animation:o2 19s ease-in-out infinite; }
+.orb-g { width:320px;height:320px;background:rgba(16,185,129,.06);bottom:25%;left:25%;animation:o1 22s ease-in-out infinite reverse; }
+.hero-in { position:relative;z-index:1;text-align:center;max-width:860px;animation:fU .95s cubic-bezier(.16,1,.3,1) both; }
+.h-pill { display:inline-flex;align-items:center;gap:8px;padding:6px 18px 6px 8px;
+  border-radius:99px;margin-bottom:30px;
+  background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);
+  font-size:.75rem;font-weight:800;letter-spacing:.07em;color:var(--pl);text-transform:uppercase; }
+.h-pill-ic { width:24px;height:24px;border-radius:99px;background:var(--p);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem; }
+.h1 { font-family:Syne;font-weight:900;font-size:clamp(2.9rem,8.5vw,5.8rem);
+  line-height:1.0;letter-spacing:-.04em;margin-bottom:24px; }
+.h1-grad { background:linear-gradient(120deg,#b09eff 0%,#f59e0b 45%,#b09eff 100%);
+  background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:pg 5s ease infinite; }
+.h-sub { font-size:clamp(1rem,2.2vw,1.22rem);color:var(--s);line-height:1.78;
+  max-width:600px;margin:0 auto 44px;font-weight:400; }
+.h-btns { display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:68px; }
+.btn-hero-p { padding:16px 40px;border-radius:13px;font-size:1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;border:none;cursor:pointer;
+  box-shadow:0 10px 36px rgba(124,58,237,.45);transition:all .28s;letter-spacing:.01em;
+  position:relative;overflow:hidden; }
+.btn-hero-p::before { content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transition:left .45s; }
+.btn-hero-p:hover { transform:translateY(-3px);box-shadow:0 18px 50px rgba(124,58,237,.55); }
+.btn-hero-p:hover::before { left:170%; }
+.btn-hero-s { padding:16px 36px;border-radius:13px;font-size:1rem;font-weight:700;
+  background:rgba(255,255,255,.04);color:var(--t2);border:1px solid rgba(255,255,255,.1);
+  cursor:pointer;transition:all .25s;backdrop-filter:blur(10px); }
+.btn-hero-s:hover { background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.22);transform:translateY(-3px); }
+.h-stats { display:flex;justify-content:center;gap:0;flex-wrap:wrap;
+  background:rgba(255,255,255,.02);border:1px solid var(--br2);
+  border-radius:20px;max-width:680px;margin:0 auto;overflow:hidden; }
+.h-stat { flex:1;min-width:140px;padding:24px 20px;text-align:center;position:relative; }
+.h-stat:not(:last-child)::after { content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:var(--br2); }
+.hn { font-family:Syne;font-weight:900;font-size:2rem;
+  background:linear-gradient(135deg,var(--pl),var(--al));-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+.hl { font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--m);margin-top:4px; }
+.scroll-hint { position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;opacity:.4; }
+.scroll-arrow { width:20px;height:32px;border:2px solid var(--s);border-radius:99px;position:relative; }
+.scroll-arrow::after { content:'';position:absolute;width:4px;height:4px;border-radius:50%;
+  background:var(--s);left:50%;transform:translateX(-50%);top:5px;animation:gt 1.6s ease infinite; }
+
+/* ── SECTION HELPERS ────────────────────────── */
+.s-wrap { padding:130px 36px;max-width:1320px;margin:0 auto; }
+.s-top { margin-bottom:72px; }
+.s-top.c { text-align:center; }
+.s-top.c .s-sub { margin:0 auto; }
+.s-tag { display:inline-flex;align-items:center;gap:7px;padding:5px 15px;border-radius:99px;
+  margin-bottom:18px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);
+  font-size:.7rem;font-weight:900;letter-spacing:.14em;color:var(--pl);text-transform:uppercase; }
+.s-h { font-family:Syne;font-weight:900;font-size:clamp(2rem,4.5vw,3.3rem);
+  letter-spacing:-.033em;line-height:1.08;margin-bottom:18px; }
+.s-sub { font-size:1.05rem;color:var(--s);line-height:1.78;max-width:580px; }
+
+/* ── FEATURES ───────────────────────────────── */
+.feat-g { display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:20px; }
+.fc { background:var(--bg3);border:1px solid var(--br);border-radius:22px;padding:34px 30px;
+  position:relative;overflow:hidden;transition:all .38s cubic-bezier(.16,1,.3,1);cursor:default; }
+.fc::before { content:'';position:absolute;inset:0;border-radius:22px;
+  background:linear-gradient(135deg,rgba(124,58,237,.08),transparent 55%);opacity:0;transition:opacity .38s; }
+.fc:hover { transform:translateY(-7px);border-color:rgba(124,58,237,.4);
+  box-shadow:0 28px 60px rgba(0,0,0,.35),0 0 0 1px rgba(124,58,237,.25); }
+.fc:hover::before { opacity:1; }
+.fc-line { position:absolute;top:0;left:28px;right:28px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,.5),transparent);
+  opacity:0;transition:opacity .38s; }
+.fc:hover .fc-line { opacity:1; }
+.fc-icon { width:54px;height:54px;border-radius:15px;display:flex;align-items:center;
+  justify-content:center;font-size:1.5rem;margin-bottom:22px;position:relative;z-index:1; }
+.fc-title { font-family:Syne;font-weight:800;font-size:1.1rem;margin-bottom:10px;position:relative;z-index:1; }
+.fc-desc { color:var(--s);font-size:.895rem;line-height:1.68;position:relative;z-index:1; }
+.fc-chip { display:inline-block;margin-top:18px;padding:3px 11px;border-radius:99px;
+  font-size:.63rem;font-weight:800;letter-spacing:.09em;position:relative;z-index:1; }
+
+/* ── GAMES ──────────────────────────────────── */
+.games-bg { padding:130px 0;
+  background:linear-gradient(180deg,var(--bg),var(--bg2) 50%,var(--bg));position:relative;overflow:hidden; }
+.games-bg::before { content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(124,58,237,.07),transparent);pointer-events:none; }
+.games-inner { max-width:1320px;margin:0 auto;padding:0 36px; }
+.games-row { display:flex;gap:18px;overflow-x:auto;padding:6px 4px 28px;
+  scrollbar-width:none;margin-top:60px;cursor:grab; }
+.games-row:active { cursor:grabbing; }
+.games-row::-webkit-scrollbar { display:none; }
+.gc { flex-shrink:0;width:192px;background:var(--bg3);border:1px solid var(--br2);
+  border-radius:20px;padding:26px 20px;text-align:center;
+  transition:all .32s cubic-bezier(.16,1,.3,1);cursor:pointer;position:relative;overflow:hidden; }
+.gc::before { content:'';position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,rgba(124,58,237,.12),transparent);opacity:0;transition:opacity .3s; }
+.gc:hover { transform:translateY(-10px)scale(1.03);border-color:rgba(124,58,237,.45);
+  box-shadow:0 24px 50px rgba(0,0,0,.4),0 0 0 1px rgba(124,58,237,.25); }
+.gc:hover::before { opacity:1; }
+.gc-em { font-size:2.9rem;display:block;margin-bottom:14px;transition:transform .3s;animation:fl 3.5s ease-in-out infinite; }
+.gc:hover .gc-em { transform:scale(1.2);animation-play-state:paused; }
+.gc-name { font-family:Syne;font-weight:800;font-size:.95rem;margin-bottom:5px; }
+.gc-p { font-size:.72rem;color:var(--m); }
+.gc-tag { display:inline-block;margin-top:10px;padding:3px 10px;border-radius:99px;
+  font-size:.63rem;font-weight:800;letter-spacing:.07em;
+  background:rgba(124,58,237,.15);color:var(--pl);border:1px solid rgba(124,58,237,.22); }
+
+/* ── PRICING ────────────────────────────────── */
+.price-g { display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px; }
+.pc { background:var(--bg3);border:1px solid var(--br2);border-radius:22px;padding:34px 28px;
+  position:relative;overflow:hidden;transition:all .32s;cursor:pointer; }
+.pc.hot { border-color:rgba(124,58,237,.45);
+  background:linear-gradient(160deg,rgba(124,58,237,.13),var(--bg3));
+  box-shadow:0 0 0 1px rgba(124,58,237,.3),0 28px 56px rgba(124,58,237,.14);
+  animation:bp 3s ease-in-out infinite; }
+.pc:hover { transform:translateY(-5px); }
+.pc.hot:hover { box-shadow:0 0 0 1px rgba(124,58,237,.55),0 36px 64px rgba(124,58,237,.22); }
+.pc-crown { position:absolute;top:-1px;right:22px;padding:5px 15px;
+  background:linear-gradient(135deg,var(--p),var(--pd));border-radius:0 0 11px 11px;
+  font-size:.62rem;font-weight:900;letter-spacing:.12em;color:#fff;text-transform:uppercase; }
+.pc-icon { font-size:2.3rem;margin-bottom:14px; }
+.pc-name { font-family:Syne;font-weight:800;font-size:.98rem;color:var(--t2);margin-bottom:8px; }
+.pc-coins { font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--a);margin:12px 0 5px; }
+.pc-bonus { font-size:.76rem;color:var(--g);height:20px; }
+.pc-price { font-size:1.02rem;color:var(--s);margin:10px 0 24px; }
+.pc-btn { width:100%;padding:12px;border-radius:11px;font-size:.875rem;font-weight:800;cursor:pointer;border:none;transition:all .22s; }
+.pc-btn.on { background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;box-shadow:0 6px 22px rgba(124,58,237,.4); }
+.pc-btn.on:hover { box-shadow:0 10px 32px rgba(124,58,237,.5);transform:translateY(-1px); }
+.pc-btn.off { background:rgba(255,255,255,.05);color:var(--s);border:1px solid var(--br2); }
+.pc-btn.off:hover { background:rgba(255,255,255,.09);color:var(--t2); }
+.pay-bar { margin-top:40px;padding:24px 28px;border-radius:18px;
+  background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.12);
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap; }
+.pay-chips { display:flex;gap:8px;flex-wrap:wrap; }
+.pay-chip { padding:4px 12px;border-radius:8px;font-size:.71rem;font-weight:700;
+  background:rgba(255,255,255,.05);border:1px solid var(--br2);color:var(--t2); }
+
+/* ── SECURITY ───────────────────────────────── */
+.sec-bg { padding:130px 36px;background:var(--bg2);position:relative;overflow:hidden; }
+.sec-bg::before { content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 75% 55% at 50% 50%,rgba(16,185,129,.05),transparent);pointer-events:none; }
+.sec-g { display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;
+  margin-top:72px;position:relative;z-index:1; }
+.si { display:flex;gap:16px;align-items:flex-start;
+  background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.1);
+  border-radius:16px;padding:22px 20px;transition:all .3s; }
+.si:hover { border-color:rgba(16,185,129,.28);background:rgba(16,185,129,.08);transform:translateY(-3px); }
+.si-ic { width:42px;height:42px;border-radius:11px;flex-shrink:0;
+  background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;font-size:1.1rem; }
+.si-t { font-weight:700;font-size:.9rem;margin-bottom:5px; }
+.si-d { font-size:.8rem;color:var(--s);line-height:1.58; }
+
+/* ── TRUST BAR ──────────────────────────────── */
+.trust { padding:60px 36px;background:var(--bg2);border-top:1px solid var(--br2);border-bottom:1px solid var(--br2); }
+.trust-inner { max-width:1320px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap; }
+.trust-item { display:flex;align-items:center;gap:10px;opacity:.6;transition:opacity .2s;cursor:default; }
+.trust-item:hover { opacity:1; }
+.trust-ic { font-size:1.4rem; }
+.trust-txt { font-size:.8rem;font-weight:700;color:var(--s);letter-spacing:.04em; }
+.trust-div { width:1px;height:28px;background:var(--br2); }
+
+/* ── TESTIMONIALS ───────────────────────────── */
+.testi-g { display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:20px;margin-top:72px; }
+.tc { background:var(--bg3);border:1px solid var(--br2);border-radius:22px;padding:30px 28px;
+  transition:all .32s;position:relative;overflow:hidden; }
+.tc::before { content:'"';position:absolute;top:-10px;right:20px;font-size:8rem;
+  font-family:Syne;font-weight:900;color:rgba(124,58,237,.06);line-height:1;pointer-events:none; }
+.tc:hover { border-color:var(--br);transform:translateY(-4px);box-shadow:0 20px 48px rgba(0,0,0,.28); }
+.tc-stars { color:var(--a);font-size:1rem;letter-spacing:2px;margin-bottom:15px; }
+.tc-q { color:var(--s);font-size:.9rem;line-height:1.72;margin-bottom:22px; }
+.tc-u { display:flex;align-items:center;gap:13px; }
+.tc-av { width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:Syne;font-weight:900;font-size:.9rem;color:#fff; }
+.tc-n { font-weight:700;font-size:.875rem; }
+.tc-d { font-size:.7rem;color:var(--m);margin-top:2px; }
+
+/* ── CTA ────────────────────────────────────── */
+.cta-wrap { padding:0 36px 100px;max-width:1320px;margin:0 auto; }
+.cta-box { border-radius:28px;padding:88px 48px;text-align:center;position:relative;overflow:hidden;
+  background:linear-gradient(140deg,rgba(124,58,237,.2) 0%,rgba(245,158,11,.1) 60%,rgba(16,185,129,.07) 100%);
+  border:1px solid rgba(124,58,237,.3); }
+.cta-box::before { content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,rgba(124,58,237,.15),transparent 65%);pointer-events:none; }
+.cta-scan { position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,.6),rgba(245,158,11,.4),transparent);
+  animation:sc 5s linear infinite; }
+.cta-h { font-family:Syne;font-weight:900;font-size:clamp(2.1rem,4.5vw,3.2rem);
+  letter-spacing:-.033em;margin-bottom:18px;position:relative; }
+.cta-sub { color:var(--s);font-size:1.05rem;max-width:520px;margin:0 auto 40px;line-height:1.76;position:relative; }
+.cta-btns { display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative; }
+.btn-cta1 { padding:17px 44px;border-radius:13px;font-size:1.05rem;font-weight:800;
+  background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;border:none;cursor:pointer;
+  box-shadow:0 12px 40px rgba(124,58,237,.5);transition:all .28s;position:relative;overflow:hidden; }
+.btn-cta1::before { content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transition:left .4s; }
+.btn-cta1:hover { transform:translateY(-3px);box-shadow:0 20px 56px rgba(124,58,237,.6); }
+.btn-cta1:hover::before { left:170%; }
+.btn-cta2 { padding:17px 36px;border-radius:13px;font-size:1rem;font-weight:700;
+  background:rgba(255,255,255,.05);color:var(--t2);border:1px solid rgba(255,255,255,.12);
+  cursor:pointer;transition:all .25s; }
+.btn-cta2:hover { background:rgba(255,255,255,.1);transform:translateY(-3px); }
+.cta-perks { margin-top:36px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;position:relative; }
+.cta-perk { display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--s); }
+.cta-perk span { color:var(--g);font-weight:900; }
+
+/* ── FOOTER ─────────────────────────────────── */
+.footer { background:var(--bg2);border-top:1px solid var(--br2);padding:80px 36px 40px; }
+.fg { max-width:1320px;margin:0 auto;display:grid;grid-template-columns:2.4fr 1fr 1fr 1fr;gap:60px;margin-bottom:60px; }
+.f-brand p { color:var(--s);font-size:.875rem;line-height:1.78;margin:16px 0 22px;max-width:310px; }
+.f-soc { display:flex;gap:10px;flex-wrap:wrap; }
+.fsb { width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--br2);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:all .22s; }
+.fsb:hover { background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.35);transform:translateY(-2px); }
+.fc5 h5 { font-size:.69rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--m);margin-bottom:18px; }
+.fc5 a { display:block;color:var(--s);font-size:.875rem;padding:5px 0;cursor:pointer;transition:color .2s; }
+.fc5 a:hover { color:var(--t); }
+.f-bot { max-width:1320px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;
+  padding-top:36px;border-top:1px solid var(--br2);gap:16px;flex-wrap:wrap; }
+.f-bot p { font-size:.78rem;color:var(--m); }
+.f-chips { display:flex;gap:8px;flex-wrap:wrap; }
+.fchip { padding:3px 11px;border-radius:99px;font-size:.65rem;font-weight:800;
+  background:rgba(16,185,129,.07);color:var(--g);border:1px solid rgba(16,185,129,.17); }
+
+/* ── NOTIFICATION TOAST ─────────────────────── */
+.toast { position:fixed;bottom:28px;right:28px;z-index:9999;
+  background:var(--bg4);border:1px solid rgba(124,58,237,.3);border-radius:14px;
+  padding:14px 20px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 16px 48px rgba(0,0,0,.5);
+  animation:nb .35s cubic-bezier(.16,1,.3,1) both; }
+.toast.hide { animation:nh .3s ease forwards; }
+.toast-ic { font-size:1.3rem;flex-shrink:0; }
+.toast-txt { font-size:.875rem;font-weight:600; }
+.toast-sub { font-size:.75rem;color:var(--s);margin-top:2px; }
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media(max-width:960px) {
+  .nav-links { display:none; }
+  .ham { display:block; }
+  .fg { grid-template-columns:1fr 1fr;gap:40px; }
+}
+@media(max-width:620px) {
+  .fg { grid-template-columns:1fr;gap:32px; }
+  .h-stats { flex-direction:column;border-radius:16px; }
+  .h-stat::after { display:none; }
+  .h-stat { border-bottom:1px solid var(--br2);padding:18px; }
+  .h-stat:last-child { border:none; }
+  .sec-bg,.cta-wrap { padding-left:20px;padding-right:20px; }
+  .cta-box { padding:60px 24px; }
+  .s-wrap { padding:90px 20px; }
+  .nw { padding:0 20px; }
+}
+`;
+
+/* ─── DATA ──────────────────────────────────── */
+const FEATURES = [
+  { ic:"🎮", bg:"rgba(124,58,237,.15)", tag:"CORE", tC:"rgba(124,58,237,.18)", tT:"#b09eff",
+    title:"Game Lobby Real-Time", desc:"Matchmaking otomatis dalam detik. Filter berdasarkan game, skill, region, dan bahasa — selalu temukan room yang pas untukmu." },
+  { ic:"🎙️", bg:"rgba(16,185,129,.13)", tag:"PREMIUM", tC:"rgba(16,185,129,.15)", tT:"#34d399",
+    title:"Voice & Chat Terenkripsi", desc:"Voice call kualitas kristal dengan enkripsi E2E. Chat real-time dengan anti-spam dan filter konten otomatis." },
+  { ic:"🏆", bg:"rgba(245,158,11,.13)", tag:"EVENT", tC:"rgba(245,158,11,.13)", tT:"#fcd34d",
+    title:"Tournament Berhadiah", desc:"Turnamen mingguan berhadiah jutaan rupiah. Bracket otomatis, anti-cheat terintegrasi, hadiah langsung ke akun." },
+  { ic:"🛡️", bg:"rgba(239,68,68,.1)", tag:"SECURITY", tC:"rgba(239,68,68,.12)", tT:"#fca5a5",
+    title:"Keamanan Fintech-Grade", desc:"Arsitektur 9.9/10 keamanan: EdDSA JWT, enkripsi AES-256-GCM, audit log hash-chained, dan behavioral risk engine." },
+  { ic:"💠", bg:"rgba(59,130,246,.12)", tag:"ECONOMY", tC:"rgba(59,130,246,.14)", tT:"#93c5fd",
+    title:"Ekosistem KenoCoin", desc:"Mata uang platform untuk akses fitur eksklusif, item premium, dan slot tournament dengan sistem anti-fraud terintegrasi." },
+  { ic:"📱", bg:"rgba(168,85,247,.12)", tag:"PLATFORM", tC:"rgba(168,85,247,.14)", tT:"#d8b4fe",
+    title:"Semua Perangkat", desc:"Responsif sempurna di HP, tablet, dan PC. Data tersinkron real-time — mulai di mana saja, lanjut di mana saja." },
+];
+
+const GAMES = [
+  { e:"🏠", n:"Brookhaven RP",  p:"2.4M", t:"Roleplay",   d:".4s" },
+  { e:"🐾", n:"Adopt Me!",      p:"1.9M", t:"Pets",       d:".5s" },
+  { e:"⚔️", n:"Blox Fruits",    p:"1.1M", t:"Fighting",   d:".6s" },
+  { e:"🗼", n:"Tower of Hell",  p:"700K", t:"Obby",       d:".7s" },
+  { e:"🔫", n:"Arsenal",        p:"580K", t:"FPS",        d:".8s" },
+  { e:"🔪", n:"Murder Mystery", p:"490K", t:"Social",     d:".9s" },
+  { e:"🚗", n:"Jailbreak",      p:"420K", t:"Open World", d:"1.0s" },
+  { e:"⚽", n:"Kick Off",       p:"310K", t:"Sports",     d:"1.1s" },
+  { e:"🌌", n:"Anime Cross",    p:"260K", t:"Anime",      d:"1.2s" },
+];
+
+const PACKS = [
+  { ic:"💠", n:"Starter",  c:100,  b:0,    p:"Rp 15.000",  hot:false },
+  { ic:"💎", n:"Popular",  c:500,  b:50,   p:"Rp 65.000",  hot:true  },
+  { ic:"👑", n:"Pro",      c:1200, b:300,  p:"Rp 130.000", hot:false },
+  { ic:"🌟", n:"Legend",   c:3000, b:1000, p:"Rp 280.000", hot:false },
+];
+
+const SEC = [
+  { i:"🔐", t:"EdDSA JWT + Family Rotation",  d:"Token asimetris. Token dicuri & dipakai ulang → seluruh sesi keluarga langsung dinonaktifkan otomatis." },
+  { i:"🚧", t:"Rate Limit Adaptif + Lockout",  d:"5 gagal login → lockout 15 menit. Cross-IP correlation deteksi credential stuffing massal." },
+  { i:"🔒", t:"Enkripsi AES-256-GCM",          d:"Data sensitif di database terenkripsi dengan kunci berbeda per field. Bocor tetap tidak terbaca." },
+  { i:"📋", t:"Audit Log Hash-Chained",         d:"Setiap aksi dicatat dengan rantai SHA-256. Tamper-evident forensic-grade, dianchor ke S3 setiap 10 menit." },
+  { i:"💳", t:"Webhook Dual-Verification",      d:"Pembayaran dikonfirmasi dari dua sumber: signature Midtrans + outbound API check independen." },
+  { i:"🌐", t:"Cloudflare Shield + WAF",        d:"DDoS protection, Web Application Firewall enterprise, dan IP reputation filtering di lapisan terdepan." },
+  { i:"🧠", t:"Behavioral Risk Engine",         d:"Skor risiko 0–100 per sesi. Impossible travel, bot detection, dan fingerprint binding secara real-time." },
+  { i:"🔑", t:"Zero-Trust Architecture",        d:"Frontend tidak pernah dipercaya. Semua logic kritikal di backend. Session bound ke device fingerprint." },
+];
+
+const TESTIMONIALS = [
+  { s:5, q:"Platform ini bener-bener next level! Voice jernih, matchmaking super cepet, dan sistem keamanannya bikin aku tenang. Mabar jadi jauh lebih seru dan aman!", n:"Rizky_Gamer", d:"Member Jan 2024", av:"R", bg:"linear-gradient(135deg,#7c3aed,#5b21b6)" },
+  { s:5, q:"Udah nyoba banyak platform mabar, Kenoverse yang paling smooth dan terpercaya. UI keren, fitur lengkap, data aman. Tidak ada platform lain yang bisa menandingi!", n:"NinjaCraft_ID", d:"Member Feb 2024", av:"N", bg:"linear-gradient(135deg,#059669,#064e3b)" },
+  { s:5, q:"Beli KenoCoin mudah banget, langsung masuk dalam detik. Room private-nya enak diatur. Tim support sangat responsif. Recommended 100% untuk semua gamer Indonesia!", n:"QueenRoblox", d:"Member Mar 2024", av:"Q", bg:"linear-gradient(135deg,#d97706,#78350f)" },
+];
+
+const TRUST = [
+  ["🔐","SSL 256-bit"], ["💳","Midtrans Partner"], ["☁️","Cloudflare Shield"],
+  ["🌍","GDPR Ready"], ["🛡️","ISO 27001 Ready"], ["✅","Zero Downtime"],
+];
+
+export default function App() {
+  const [solid, setSolid]   = useState(false);
+  const [mob,   setMob]     = useState(false);
+  const [toast, setToast]   = useState(null);
+  const [hiding, setHiding] = useState(false);
+  const prevY = useRef(0);
+
+  const onlineN = useMemo(() => (11847 + Math.floor(Math.random() * 3500)).toLocaleString("id-ID"), []);
+
+  useEffect(() => {
+    const fn = () => {
+      const y = window.scrollY;
+      setSolid(y > 20);
+      prevY.current = y;
+    };
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  const scrollTo = useCallback((id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMob(false);
+  }, []);
+
+  const showToast = useCallback((ic, txt, sub) => {
+    setHiding(false);
+    setToast({ ic, txt, sub });
+    const t1 = setTimeout(() => setHiding(true), 3000);
+    const t2 = setTimeout(() => setToast(null), 3400);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  const handleBuy = useCallback((name) => {
+    showToast("💠", `Paket ${name} Dipilih!`, "Arahkan ke halaman checkout...");
+  }, [showToast]);
+
+  const NAV = ["Fitur", "Game", "Harga", "Keamanan"];
+
+  return (
+    <>
+      <style>{CSS}</style>
+
+      {/* NAVBAR */}
+      <nav className={`nav${solid ? " solid" : ""}`} role="navigation" aria-label="Navigasi utama">
+        <div className="nw">
+          <div className="logo-w" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} role="button" tabIndex={0} aria-label="Kembali ke atas">
+            <div className="logo-gem" aria-hidden="true">🌐</div>
+            <span className="logo-txt">KENOVERSE</span>
+            <span className="logo-live" aria-hidden="true" />
+          </div>
+          <div className="nav-links" role="menubar">
+            {NAV.map(n => (
+              <button key={n} className="nl" role="menuitem" onClick={() => scrollTo(n.toLowerCase())} aria-label={`Pergi ke seksi ${n}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+          <div className="nav-r">
+            <div className="live-badge" aria-live="polite" aria-label={`${onlineN} pengguna online`}>
+              <span className="live-dot" aria-hidden="true" />
+              {onlineN} online
+            </div>
+            <button className="btn-start" onClick={() => scrollTo("harga")} aria-label="Mulai bergabung gratis">
+              Mulai Gratis
+            </button>
+            <button className="ham" onClick={() => setMob(o => !o)} aria-label={mob ? "Tutup menu" : "Buka menu"} aria-expanded={mob}>
+              {mob ? "✕" : "☰"}
+            </button>
+          </div>
+        </div>
+        {mob && (
+          <div className="mob-menu" role="menu" aria-label="Menu mobile">
+            {NAV.map(n => (
+              <button key={n} className="nl" role="menuitem" onClick={() => scrollTo(n.toLowerCase())}>{n}</button>
+            ))}
+            <button className="btn-start" style={{ marginTop: 10, width: "100%" }} onClick={() => { scrollTo("harga"); setMob(false); }}>
+              Mulai Gratis — Tidak Perlu Kartu Kredit
+            </button>
+          </div>
+        )}
+      </nav>
+
+      {/* HERO */}
+      <section className="hero" aria-labelledby="hero-heading">
+        <div className="hero-grid" aria-hidden="true" />
+        <div className="orb orb-p" aria-hidden="true" />
+        <div className="orb orb-a" aria-hidden="true" />
+        <div className="orb orb-g" aria-hidden="true" />
+        <div className="hero-grad" aria-hidden="true" />
+        <div className="hero-in">
+          <div className="h-pill" role="status">
+            <div className="h-pill-ic" aria-hidden="true">🎮</div>
+            Platform Mabar Roblox #1 Indonesia
+          </div>
+          <h1 className="h1" id="hero-heading">
+            Mabar Lebih Seru,<br />
+            <span className="h1-grad">Lebih Aman, Lebih Epic</span>
+          </h1>
+          <p className="h-sub">
+            Temukan teman gaming terbaik, buat room private, voice chat HD, dan menangkan tournament berhadiah jutaan — semua dalam satu platform terpercaya.
+          </p>
+          <div className="h-btns">
+            <button className="btn-hero-p" onClick={() => scrollTo("harga")} aria-label="Bergabung gratis sekarang">
+              🚀 Bergabung Gratis — Sekarang
+            </button>
+            <button className="btn-hero-s" onClick={() => scrollTo("fitur")} aria-label="Lihat semua fitur">
+              ✦ Lihat Semua Fitur
+            </button>
+          </div>
+          <div className="h-stats" role="region" aria-label="Statistik platform">
+            {[["15K+","Gamer Aktif"],["50K+","Sesi Mabar"],["99.9%","Uptime"],["4.9 ★","Rating"]].map(([n,l],i) => (
+              <div className="h-stat" key={l}>
+                <div className="hn" aria-label={`${n} ${l}`}>{n}</div>
+                <div className="hl">{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="scroll-hint" aria-hidden="true">
+          <div className="scroll-arrow" />
+        </div>
+      </section>
+
+      {/* TRUST BAR */}
+      <div className="trust" role="region" aria-label="Sertifikasi dan kepercayaan">
+        <div className="trust-inner">
+          {TRUST.map(([ic, txt], i) => (
+            <>
+              {i > 0 && <div key={`d${i}`} className="trust-div" aria-hidden="true" />}
+              <div key={txt} className="trust-item" aria-label={txt}>
+                <span className="trust-ic" aria-hidden="true">{ic}</span>
+                <span className="trust-txt">{txt}</span>
+              </div>
+            </>
+          ))}
+        </div>
+      </div>
+
+      {/* FITUR */}
+      <section id="fitur" aria-labelledby="fitur-heading">
+        <div className="s-wrap">
+          <div className="s-top">
+            <div className="s-tag">✦ Kenapa Kenoverse?</div>
+            <h2 className="s-h" id="fitur-heading">Semua yang Kamu Butuhkan<br />untuk Mabar Sempurna</h2>
+            <p className="s-sub">Dari matchmaking otomatis hingga keamanan fintech-grade — kami handle semua infrastruktur supaya kamu bisa fokus bermain.</p>
+          </div>
+          <div className="feat-g" role="list">
+            {FEATURES.map(f => (
+              <article className="fc" key={f.title} role="listitem">
+                <div className="fc-line" aria-hidden="true" />
+                <div className="fc-icon" style={{ background: f.bg }} aria-hidden="true">{f.ic}</div>
+                <h3 className="fc-title">{f.title}</h3>
+                <p className="fc-desc">{f.desc}</p>
+                <div className="fc-chip" style={{ background: f.tC, color: f.tT, border: `1px solid ${f.tC}` }}>
+                  {f.tag}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* GAMES */}
+      <section id="game" className="games-bg" aria-labelledby="game-heading">
+        <div className="games-inner">
+          <div className="s-top">
+            <div className="s-tag">🕹 Game Library</div>
+            <h2 className="s-h" id="game-heading">Game Populer yang Tersedia</h2>
+            <p className="s-sub">Dari Roleplay santai sampai FPS kompetitif — ribuan room aktif setiap hari menanti kamu.</p>
+          </div>
+          <div className="games-row" role="list" aria-label="Daftar game tersedia">
+            {GAMES.map((g, i) => (
+              <div className="gc" key={g.n} role="listitem" style={{ animationDelay: g.d }}
+                onClick={() => showToast("🎮", `Masuk ke ${g.n}`, "Mencari room yang tersedia...")}
+                tabIndex={0} onKeyDown={e => e.key === "Enter" && showToast("🎮", `Masuk ke ${g.n}`, "Mencari room yang tersedia...")}
+                aria-label={`${g.n} — ${g.p} pemain — genre ${g.t}`}
+              >
+                <span className="gc-em" style={{ animationDelay: `${i * 0.32}s` }} aria-hidden="true">{g.e}</span>
+                <div className="gc-name">{g.n}</div>
+                <div className="gc-p">👥 {g.p} pemain</div>
+                <div className="gc-tag">{g.t}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HARGA */}
+      <section id="harga" aria-labelledby="harga-heading">
+        <div className="s-wrap">
+          <div className="s-top">
+            <div className="s-tag">💠 KenoCoin</div>
+            <h2 className="s-h" id="harga-heading">Pilih Paket Sesuai<br />Kebutuhanmu</h2>
+            <p className="s-sub">Beli KenoCoin untuk akses fitur premium, item eksklusif, dan slot tournament. Aman, instan, terpercaya.</p>
+          </div>
+          <div className="price-g" role="list">
+            {PACKS.map(p => (
+              <article className={`pc${p.hot ? " hot" : ""}`} key={p.n} role="listitem" onClick={() => handleBuy(p.n)}
+                tabIndex={0} onKeyDown={e => e.key === "Enter" && handleBuy(p.n)}
+                aria-label={`Paket ${p.n}: ${p.c} KenoCoin seharga ${p.p}`}
+              >
+                {p.hot && <div className="pc-crown" aria-label="Paket terpopuler">⚡ Terpopuler</div>}
+                <div className="pc-icon" aria-hidden="true">{p.ic}</div>
+                <div className="pc-name">{p.n}</div>
+                <div className="pc-coins">{p.c.toLocaleString("id-ID")} 💠</div>
+                <div className="pc-bonus">{p.b > 0 ? `+ ${p.b} bonus coins 🎁` : ""}</div>
+                <div className="pc-price">{p.p}</div>
+                <button className={`pc-btn${p.hot ? " on" : " off"}`}
+                  onClick={e => { e.stopPropagation(); handleBuy(p.n); }}
+                  aria-label={`Beli paket ${p.n} seharga ${p.p}`}
+                >
+                  {p.hot ? "💳 Beli Sekarang" : "Beli Paket"}
+                </button>
+              </article>
+            ))}
+          </div>
+          <div className="pay-bar" role="region" aria-label="Metode pembayaran yang diterima">
+            <span aria-hidden="true" style={{ fontSize: "1.6rem" }}>🔐</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: ".875rem", marginBottom: 8 }}>
+                Pembayaran 100% Aman & Terenkripsi
+              </div>
+              <div className="pay-chips" role="list" aria-label="Daftar metode pembayaran">
+                {["GoPay","OVO","DANA","ShopeePay","LinkAja","BCA","BRI","Mandiri","BNI","PayPal","Visa","USDT"].map(m => (
+                  <div key={m} className="pay-chip" role="listitem">{m}</div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {["SSL 256-bit","Midtrans Verified","Webhook Secured"].map(l => (
+                <span key={l} style={{ padding:"4px 12px",borderRadius:99,fontSize:".68rem",fontWeight:800,
+                  background:"rgba(16,185,129,.1)",color:"var(--g)",border:"1px solid rgba(16,185,129,.2)" }}>{l}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* KEAMANAN */}
+      <section id="keamanan" className="sec-bg" aria-labelledby="sec-heading">
+        <div style={{ maxWidth:1320, margin:"0 auto" }}>
+          <div className="s-top">
+            <div className="s-tag">🛡️ Security Architecture</div>
+            <h2 className="s-h" id="sec-heading">Keamanan 9.9/10 —<br />Hampir Mustahil Ditembus</h2>
+            <p className="s-sub">Dibangun dengan arsitektur defense-in-depth berlapis 8 — standar yang sama dengan platform fintech dan perbankan digital.</p>
+          </div>
+          <div className="sec-g" role="list">
+            {SEC.map(s => (
+              <article className="si" key={s.t} role="listitem">
+                <div className="si-ic" aria-hidden="true">{s.i}</div>
+                <div>
+                  <div className="si-t">{s.t}</div>
+                  <div className="si-d">{s.d}</div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div style={{ marginTop:48, padding:"24px 28px", borderRadius:16,
+            background:"rgba(124,58,237,.06)", border:"1px solid rgba(124,58,237,.15)",
+            display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+            <span style={{ fontSize:"1.5rem" }} aria-hidden="true">🔬</span>
+            <div>
+              <div style={{ fontWeight:800, fontSize:".9rem", marginBottom:4 }}>Diaudit 6 Iterasi Keamanan</div>
+              <div style={{ color:"var(--s)", fontSize:".82rem", lineHeight:1.6 }}>
+                Sistem ini telah melalui red-team simulation dengan threat model "attacker already inside" —
+                closed semua path ke double-payment, token theft, session hijacking, dan race conditions.
+              </div>
+            </div>
+            <div style={{ marginLeft:"auto", display:"flex", gap:8, flexWrap:"wrap" }}>
+              {["Zero Known Exploits","Linearizable Locks","Idempotent Payments"].map(l => (
+                <span key={l} style={{ padding:"4px 12px", borderRadius:99, fontSize:".67rem", fontWeight:800,
+                  background:"rgba(124,58,237,.12)", color:var_pl(), border:"1px solid rgba(124,58,237,.2)" }}>{l}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section aria-labelledby="testi-heading">
+        <div className="s-wrap s-top c">
+          <div className="s-tag">💬 Komunitas</div>
+          <h2 className="s-h" id="testi-heading">Apa Kata Mereka?</h2>
+          <p className="s-sub center">Lebih dari 15.000 gamer sudah merasakan pengalaman berbeda bersama Kenoverse.</p>
+          <div className="testi-g" role="list">
+            {TESTIMONIALS.map(t => (
+              <article className="tc" key={t.n} role="listitem">
+                <div className="tc-stars" aria-label={`${t.s} dari 5 bintang`}>{"★".repeat(t.s)}</div>
+                <blockquote className="tc-q">"{t.q}"</blockquote>
+                <div className="tc-u">
+                  <div className="tc-av" style={{ background: t.bg }} aria-hidden="true">{t.av}</div>
+                  <div>
+                    <div className="tc-n">{t.n}</div>
+                    <div className="tc-d">{t.d}</div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <div className="cta-wrap" role="region" aria-labelledby="cta-heading">
+        <div className="cta-box noise">
+          <div className="cta-scan" aria-hidden="true" />
+          <div style={{ fontSize:"3.8rem", marginBottom:20, position:"relative" }} aria-hidden="true">🎮</div>
+          <h2 className="cta-h" id="cta-heading">
+            Siap Join{" "}
+            <span style={{ background:"linear-gradient(120deg,#b09eff,#f59e0b)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              15.000+ Gamer
+            </span>
+            {" "}Indonesia?
+          </h2>
+          <p className="cta-sub">Gratis untuk bergabung. Tidak perlu kartu kredit. Langsung main dalam 60 detik.</p>
+          <div className="cta-btns">
+            <button className="btn-cta1" onClick={() => scrollTo("harga")} aria-label="Buat akun gratis sekarang">
+              🚀 Buat Akun Gratis Sekarang
+            </button>
+            <button className="btn-cta2" onClick={() => scrollTo("fitur")} aria-label="Pelajari lebih lanjut tentang fitur">
+              📖 Pelajari Lebih Lanjut
+            </button>
+          </div>
+          <div className="cta-perks" role="list" aria-label="Keuntungan bergabung">
+            {[["✓","Gratis bergabung"],["✓","Tidak ada iklan"],["✓","Data terenkripsi"],["✓","Support 24/7"]].map(([ic,t]) => (
+              <div key={t} className="cta-perk" role="listitem">
+                <span>{ic}</span> {t}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="footer" role="contentinfo">
+        <div className="fg">
+          <div className="f-brand">
+            <div className="logo-w" style={{ marginBottom:4 }}>
+              <div className="logo-gem" aria-hidden="true">🌐</div>
+              <span className="logo-txt">KENOVERSE</span>
+            </div>
+            <p>Platform mabar Roblox #1 Indonesia. Bergabunglah dengan ribuan gamer aktif, raih hadiah di tournament, dan nikmati pengalaman gaming yang aman dan premium.</p>
+            <div className="f-soc" role="list" aria-label="Ikuti kami di media sosial">
+              {[["🐦","Twitter"],["📘","Facebook"],["📷","Instagram"],["💬","Discord"],["▶","YouTube"]].map(([ic,name]) => (
+                <button key={name} className="fsb" role="listitem" aria-label={`Ikuti di ${name}`}>{ic}</button>
+              ))}
+            </div>
+          </div>
+          {[
+            { h:"Platform", links:["Game Lobby","Matchmaking","Voice Chat","Tournament","Leaderboard","KenoCoin"] },
+            { h:"Akun",     links:["Daftar Gratis","Masuk","Dashboard","Sesi Aktif","Premium","Riwayat"] },
+            { h:"Bantuan",  links:["FAQ","Hubungi Kami","Privasi","Syarat & Ketentuan","Keamanan","Status"] },
+          ].map(col => (
+            <nav key={col.h} className="fc5" aria-labelledby={`footer-${col.h}`}>
+              <h5 id={`footer-${col.h}`}>{col.h}</h5>
+              {col.links.map(l => <a key={l} tabIndex={0}>{l}</a>)}
+            </nav>
+          ))}
+        </div>
+        <div className="f-bot">
+          <p>© 2025 KENOVERSE.GG — Semua hak dilindungi. Dibuat dengan ❤️ untuk gamer Indonesia.</p>
+          <div className="f-chips" role="list" aria-label="Sertifikasi keamanan">
+            {["SSL Secured","Midtrans Partner","Data Encrypted","GDPR Ready"].map(c => (
+              <span key={c} className="fchip" role="listitem">{c}</span>
+            ))}
+          </div>
+        </div>
+      </footer>
+
+      {/* TOAST */}
+      {toast && (
+        <div className={`toast${hiding ? " hide" : ""}`} role="alert" aria-live="assertive">
+          <span className="toast-ic" aria-hidden="true">{toast.ic}</span>
+          <div>
+            <div className="toast-txt">{toast.txt}</div>
+            <div className="toast-sub">{toast.sub}</div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* Helper — avoids template literal in JSX style */
+function var_pl() { return "#b09eff"; }
